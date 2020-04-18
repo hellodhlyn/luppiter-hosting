@@ -2,9 +2,9 @@ package main
 
 import (
 	"crypto/tls"
+	"fmt"
 
 	"io"
-	"log"
 	"net/http"
 	"os"
 	"strings"
@@ -34,20 +34,23 @@ func handle(w http.ResponseWriter, r *http.Request) {
 	}
 
 	pathPrefix := "/storage/" + props.BucketName + "/" + props.FilePrefix
-	res, err := proxyRequest(r.Method, pathPrefix+r.URL.Path)
-	if err != nil {
-		log.Fatal(err)
-		w.WriteHeader(http.StatusBadGateway)
-		return
+	fileName := r.URL.Path
+	if strings.HasPrefix(fileName, "/") {
+		fileName = strings.TrimPrefix(fileName, "/")
+	}
+	if fileName == "" {
+		fileName = "index.html"
 	}
 
-	if res.StatusCode != http.StatusOK && props.RedirectToIdnex {
+	res, err := proxyRequest(r.Method, pathPrefix+fileName)
+	if err != nil || (res.StatusCode != http.StatusOK && props.RedirectToIndex) {
 		res, err = proxyRequest(r.Method, pathPrefix+"index.html")
-		if err != nil {
-			log.Fatal(err)
-			w.WriteHeader(http.StatusBadGateway)
-			return
-		}
+	}
+
+	if err != nil {
+		fmt.Println(err)
+		w.WriteHeader(http.StatusBadGateway)
+		return
 	}
 
 	for key, values := range res.Header {
@@ -74,5 +77,5 @@ func main() {
 		},
 	}
 
-	log.Fatal(srv.ListenAndServeTLS("", ""))
+	fmt.Println(srv.ListenAndServeTLS("", ""))
 }

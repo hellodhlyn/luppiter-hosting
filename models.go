@@ -33,5 +33,5 @@ func (h *hostingBackend) getProps() (*hostingBackendProps, error) {
 type hostingBackendProps struct {
 	BucketName      string `msgpack:"b"`
 	FilePrefix      string `msgpack:"p"`
-	RedirectToIdnex bool   `msgpack:"i"`
+	RedirectToIndex bool   `msgpack:"i"`
 }
